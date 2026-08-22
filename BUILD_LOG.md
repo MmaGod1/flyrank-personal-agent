@@ -61,3 +61,7 @@ Added `api/match.ts` as a Vercel serverless function for `POST /api/match`, reus
 ## Vercel Build Permission Fix
 
 Vercel could not execute the locally installed `node_modules/.bin/tsc` shim and reported `Permission denied`, although the project built locally. Updated the `build` script to invoke TypeScript through Node at `./node_modules/typescript/bin/tsc`, avoiding the executable shim without changing application code or functionality. The existing TypeScript 5.9.3 dependency and lockfile were retained.
+
+## Vercel Root Route Fix
+
+Added `vercel.json` with a root rewrite from `/` to `/public/index.html`, so Vercel serves the existing UI at the deployed root. The rewrite does not affect `/api/match`, which continues to resolve to `api/match.ts`; local commands and application functionality remain unchanged.
