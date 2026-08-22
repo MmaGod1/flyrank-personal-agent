@@ -1,0 +1,17 @@
+{
+  "dependencies": {
+    "@google/genai": "^2.18.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.2.0",
+    "typescript": "^7.0.2"
+  },
+  "name": "flyrank-personal-agent",
+  "version": "1.0.0",
+  "private": "true",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "npm run build && node dist/agent.js"
+  }
+}
