@@ -1,201 +1,117 @@
-We are starting FL-07 — Build the Agent, based on the FL-06 specification for my "Job Scout & CV Tailor" agent.
+# Job Scout & CV Tailor Agent
 
-Do NOT build the entire agent yet.
+An agent that evaluates job postings against a fixed set of personal job preferences using the Gemini API, and returns a structured match result (match level, reasons, relevant requirements, missing requirements). Built incrementally as a CLI tool, then a web UI, then hardened for deployment and edge cases.
 
-We need to build the narrowest working MVP that completes one core job end-to-end.
+## Stack
 
-For the first MVP, the agent should:
+- TypeScript / Node.js
+- Gemini API (`models/gemini-3.6-flash`)
+- Zod (schema validation for tool input/output)
+- Vercel (serverless deployment)
+- No frontend framework — plain HTML/JS UI
+- No database, no authentication
 
-1. Accept a job posting as input.
-2. Have a small set of my job preferences available to the agent:
-   - Target roles: internship and junior frontend development
-   - Relevant technologies: HTML, CSS, JavaScript, React
-   - Experience level: internship/junior
-3. Send the job posting and preferences to Gemini through the Gemini API.
-4. Ask Gemini to evaluate whether the job is a good match.
-5. Return a structured result containing:
-   - match level
-   - reasons for the match/mismatch
-   - relevant requirements found
-   - missing requirements or skill gaps
-6. Never invent qualifications, experience, or skills.
-7. Do not apply for jobs or perform any external action.
+## Core Behavior
 
-Important implementation requirements:
+- Accepts a single job posting as input.
+- Evaluates it against fixed preferences:
+  - Target roles: internship, junior frontend development
+  - Relevant technologies: HTML, CSS, JavaScript, React
+  - Experience level: internship/junior
+- Sends the posting + preferences to Gemini and asks it to judge fit.
+- Returns a structured result:
+  - Match level
+  - Reasons for match/mismatch
+  - Relevant requirements found
+  - Missing requirements / skill gaps
+- **Never invents qualifications, experience, or skills.**
+- **Never applies for jobs or takes external action.** Evaluation only.
 
-- Use TypeScript/Node.js for this first scripted agent.
-- Use the Gemini API as specified in FL-06.
-- Keep the Gemini API key in an environment variable and never hard-code it.
-- Use a simple structure that is easy for a beginner to understand.
-- Do not add unnecessary libraries.
-- Do not build scheduling yet.
-- Do not build CV tailoring yet.
-- Do not build multiple job websites yet.
-- Do not build a frontend UI yet unless the existing project already requires one.
-- Do not add authentication, databases, or deployment.
-- Keep the first version focused on one successful end-to-end agent run.
+## Build Stages
 
-Before modifying files:
+### FL-07 — Core Agent (MVP)
+Narrowest working version: input → Gemini → analysis → structured result.
 
-1. Inspect the existing project structure.
-2. Tell me which files you intend to create or modify and why.
-3. Identify the command needed to install any required dependency.
-4. Explain briefly how the agent's flow will work:
-   input → Gemini → analysis → structured result.
+- TypeScript/Node.js CLI script.
+- Gemini API key read from an environment variable, never hard-coded.
+- Error handling for:
+  - missing Gemini API key
+  - failed Gemini request
+  - invalid/empty job input
+- Explicitly excluded at this stage: CV tailoring, scheduling, multiple job sites, frontend UI, auth, database, deployment.
+- Validated end-to-end with a live Gemini call using a realistic junior frontend job posting, plus a missing-API-key guardrail test.
+- Model updated from `models/gemini-2.5-flash` (deprecated, returned 404) to `models/gemini-3.6-flash`. No other changes made.
 
-Then implement the smallest working version.
+### FE-07 — Tool Results & Structured UI
+Turned the CLI agent into a small web UI.
 
-Add clear error handling for:
-- missing Gemini API key
-- failed Gemini request
-- invalid/empty job input
+- Job-posting input form.
+- UI connects to the existing Gemini-powered agent; API key stays server-side.
+- Job-matching tool defined with a Zod schema and execute function.
+- Tool lifecycle states rendered distinctly:
+  - `input-streaming`
+  - `input-available`
+  - `output-available`
+  - `output-error`
+- Result rendered as a proper match-result component (not raw JSON): match level, reasons, relevant requirements, missing requirements.
+- Designed error state with a retry action.
 
-After implementation, tell me:
-- exactly which files were created or modified
-- how to add the environment variable
-- the exact command to run the agent
-- one example input I can use to test it
-- what successful output should look like
+### Deployment Fixes (Vercel)
+- Replaced the native Node HTTP server (`server.ts`, works locally but not servable as-is on Vercel) with a Vercel API function at `/api/match`, keeping the existing UI, Gemini logic, and Zod schema untouched.
+- Fixed a `tsc: Permission denied` build failure on Vercel with a build/config-level fix (no application code changes).
+- Fixed a blank deployed page (empty `<body>`, no console errors — `public/index.html` wasn't being served at root):
+  - Moved `public/index.html` → `index.html`.
+  - Removed the now-unnecessary `vercel.json` rewrite for `/` → `/public/index.html`.
+  - Confirmed `GET /` serves `index.html` and `POST /api/match` continues using `api/match.ts`.
 
-Do not move on to CV tailoring, scheduling, multiple job sites, or other features yet.
+### FE-08 — Failure & Edge-Case Handling (in progress)
+Inspection-only stage before making changes. Reviewing:
 
+- `index.html`
+- `api/match.ts`
+- `src/jobMatchingTool.ts`
+- `src/server.ts`
+- `BUILD_LOG.md`
+- `package.json`
 
-Before we add any new features, validate the FL-07 MVP end to end.
+Checking current handling of: empty input, Gemini/API failure, failed tool execution, slow response, no results, network failure — and whether the UI already has a useful empty state, loading state, error state, and working retry action, plus any mobile/responsive issues. Findings determine which FE-08 requirements are already met vs. genuinely missing before any fix work begins.
 
-Do not modify the architecture or add new features.
+## Project Structure
 
-1. Run:
-   npm run build
+```
+.
+├── index.html              # Frontend UI (served at GET /)
+├── api/
+│   └── match.ts             # Vercel serverless function (POST /api/match)
+├── src/
+│   ├── jobMatchingTool.ts   # Zod schema + execute function for the matching tool
+│   └── server.ts            # Local dev CLI/server entry point
+├── BUILD_LOG.md              # Running log of implementation changes
+└── package.json
+```
 
-2. Then run the agent with a realistic junior frontend job posting.
+## Environment
 
-3. Confirm that:
-   - The Gemini API is actually called.
-   - A structured match result is returned.
-   - The result contains match level, reasons, relevant requirements, and missing requirements.
-   - The agent does not invent skills or qualifications.
-   - Empty input is handled correctly.
-   - Missing GEMINI_API_KEY is handled correctly.
+Set the Gemini API key as an environment variable — never hard-code it or expose it to the browser:
 
-4. If the build or runtime test fails, fix only the issue necessary to make the current MVP work.
+```
+GEMINI_API_KEY=your_key_here
+```
 
-5. Do not add CV tailoring, scheduling, multiple job websites, a frontend UI, authentication, a database, or deployment yet.
+## Running Locally
 
-After validation, report:
-- whether npm run build passed
-- whether the live Gemini end-to-end test passed
-- the exact command used for the successful test
-- any issue that was fixed
-- whether the current FL-07 MVP is ready for the required screen recording
-
-Do not continue to the next feature after this validation.
-
-
-The GEMINI_API_KEY is now configured in my environment.
-
-Do not change the implementation.
-
-Run the actual FL-07 end-to-end validation now.
-
-First run:
-
+```bash
 npm run build
+npm start -- "paste a job posting here"
+```
 
-Then run:
+## Change Log
 
-npm start -- "We are hiring a Junior Frontend Developer Intern to help build responsive web interfaces. You will work with HTML, CSS, JavaScript and React, collaborate with designers, fix UI bugs, and learn from senior engineers. This is an entry-level role; professional experience is not required. TypeScript is a bonus, not required. Location: remote within the UK."
+See `BUILD_LOG.md` for the full, append-only history of implementation changes.
 
-Confirm that Gemini actually responds and that the agent returns the expected structured match result.
+## Guardrails Across All Stages
 
-Then test the missing-key guardrail by temporarily removing GEMINI_API_KEY, running the agent, confirming the correct error, and restoring the environment variable afterward.
-
-Do not add or change any features.
-
-Report only:
-- build result
-- live Gemini result
-- missing-key test result
-- whether the FL-07 MVP is now ready for the raw screen recording
-- any issues encountered
-
-
-The live Gemini test reached the API successfully, but the request failed because the current model is unavailable:
-
-models/gemini-2.5-flash
-
-The API returned a 404 and specifically instructed us to use:
-
-models/gemini-3.6-flash
-
-Make the smallest possible change to update the Gemini model to models/gemini-3.6-flash.
-
-Do not change the agent architecture, prompt, output structure, error handling, or any other functionality.
-
-After changing it:
-
-1. Run npm run build.
-2. Do not run any other feature work.
-3. Tell me exactly which file and line were changed.
-4. Tell me whether the build passed.
-
-Do not modify .env or expose the API key.
-
-We are now implementing FE-07: Tool results and structured output in the UI.
-
-Build on the existing FL-07 project. Do not rewrite the existing agent or remove working functionality.
-
-Goal:
-Turn the existing job-matching agent into a small web UI where a user can enter a job posting and see the structured matching result as actual UI components.
-
-Requirements:
-1. Add a simple frontend UI for entering/pasting a job posting.
-2. Connect the UI to the existing Gemini-powered agent.
-3. Keep the Gemini API key server-side. Never expose GEMINI_API_KEY to the browser.
-4. Define the job-matching tool with a Zod schema and execute function.
-5. Render these tool lifecycle states distinctly:
-   - input-streaming
-   - input-available
-   - output-available
-   - output-error
-6. Do NOT render the tool result as raw JSON.
-7. Render the successful result as a proper match-result component showing:
-   - Match level
-   - Reasons
-   - Relevant requirements
-   - Missing requirements
-8. Create a designed error state with a retry action.
-9. Keep the implementation beginner-friendly and avoid unnecessary dependencies.
-10. Make sure TypeScript has no errors.
-
-Before changing files:
-- Inspect the existing project.
-- Tell me which files you will create or modify and why.
-- Then implement the smallest working version.
-
-Also append this iteration to the EXISTING BUILD_LOG.md. Do not rewrite previous entries.
-
-
-The app deploys successfully to Vercel, but the deployed URL is blank.
-
-Do not change the existing UI, Gemini logic, Zod schema, or functionality.
-
-The issue is that the current app uses a native Node HTTP server (`server.ts`), which works locally but is not being served as a persistent Node server by Vercel.
-
-Adapt the existing implementation to Vercel's serverless architecture with the smallest possible change.
-
-Requirements:
-
-1. Keep the existing `public/index.html` UI.
-2. Keep `jobMatchingTool.ts` and its Zod schema/execute function.
-3. Keep the Gemini API key server-side.
-4. Create the appropriate Vercel API function for `/api/match`.
-5. Make the frontend call `/api/match` exactly as it does locally.
-6. Do not add React, Next.js, or another framework.
-7. Do not rewrite the existing UI.
-8. Keep the local CLI agent working.
-9. Keep the existing `BUILD_LOG.md` and append this deployment fix to it. Do not rewrite previous entries.
-10. Make sure TypeScript builds successfully.
-
-Before making changes, briefly identify which files will be created/modified and why.
-
-Do not deploy or run the production server. I will test and redeploy manually.
+- No CV tailoring, scheduling, multi-site support, auth, or database until explicitly scoped.
+- No unnecessary dependencies or frameworks.
+- Changes are scoped to the smallest fix needed; existing working functionality is not rewritten.
+- Every stage is validated (build + live test) before moving to the next feature.
