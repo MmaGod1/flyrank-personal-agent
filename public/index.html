@@ -124,7 +124,6 @@
       setStatus("input-streaming");
       button.disabled = true;
       try {
-        setStatus("input-available");
         const response = await fetch("/api/match", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -154,6 +153,9 @@
     form.addEventListener("submit", (event) => {
       event.preventDefault();
       analyze();
+    });
+    input.addEventListener("input", () => {
+      if (!button.disabled && input.value.trim()) setStatus("input-available");
     });
   </script>
 </body>
