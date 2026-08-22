@@ -41,3 +41,7 @@ The completed flow was:
 `job posting -> agent -> Gemini API -> structured match result`
 
 The successful test identified a junior frontend internship as a strong match based on its role, technologies, and experience level. The result included the match level, reasons, relevant requirements, and missing requirements, without inventing skills or qualifications.
+
+## FE-07: Tool Results and Structured Output in the UI
+
+Added a small browser UI and native Node.js server around the existing agent. The job-matching tool validates its input and output with Zod, while the server keeps `GEMINI_API_KEY` out of the browser. The UI shows input-streaming, input-available, output-available, and output-error states, renders the match result as separate components, and provides a retry action for errors.

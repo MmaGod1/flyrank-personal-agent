@@ -1,5 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
-const preferences = {
+export const preferences = {
     targetRoles: ["internship frontend developer", "junior frontend developer"],
     technologies: ["HTML", "CSS", "JavaScript", "React"],
     experienceLevel: ["internship", "junior"]
@@ -11,7 +11,7 @@ function getJobPosting() {
     }
     return "";
 }
-function parseMatchResult(value) {
+export function parseMatchResult(value) {
     const parsed = JSON.parse(value);
     if (!parsed || typeof parsed !== "object") {
         throw new Error("Gemini returned an invalid result.");
@@ -34,7 +34,7 @@ function parseMatchResult(value) {
         missingRequirements: result.missingRequirements
     };
 }
-async function evaluateJob(jobPosting) {
+export async function evaluateJob(jobPosting) {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
         throw new Error("GEMINI_API_KEY is missing. Add it as an environment variable before running the agent.");

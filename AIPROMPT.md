@@ -140,5 +140,36 @@ After changing it:
 
 Do not modify .env or expose the API key.
 
+We are now implementing FE-07: Tool results and structured output in the UI.
 
+Build on the existing FL-07 project. Do not rewrite the existing agent or remove working functionality.
 
+Goal:
+Turn the existing job-matching agent into a small web UI where a user can enter a job posting and see the structured matching result as actual UI components.
+
+Requirements:
+1. Add a simple frontend UI for entering/pasting a job posting.
+2. Connect the UI to the existing Gemini-powered agent.
+3. Keep the Gemini API key server-side. Never expose GEMINI_API_KEY to the browser.
+4. Define the job-matching tool with a Zod schema and execute function.
+5. Render these tool lifecycle states distinctly:
+   - input-streaming
+   - input-available
+   - output-available
+   - output-error
+6. Do NOT render the tool result as raw JSON.
+7. Render the successful result as a proper match-result component showing:
+   - Match level
+   - Reasons
+   - Relevant requirements
+   - Missing requirements
+8. Create a designed error state with a retry action.
+9. Keep the implementation beginner-friendly and avoid unnecessary dependencies.
+10. Make sure TypeScript has no errors.
+
+Before changing files:
+- Inspect the existing project.
+- Tell me which files you will create or modify and why.
+- Then implement the smallest working version.
+
+Also append this iteration to the EXISTING BUILD_LOG.md. Do not rewrite previous entries.
