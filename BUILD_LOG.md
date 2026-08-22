@@ -53,3 +53,7 @@ Verified that the Zod tool schema and execute function remain in `src/jobMatchin
 ## FE-07 Final Implementation Note
 
 Implemented the browser UI, server-side Gemini connection, Zod-backed job-matching tool, structured result components, lifecycle states, error state, and retry action. Updated the UI so `input-streaming` remains visible during requests. Tested with `npm run build`, which passed. Manual browser testing was not performed; this is the only outstanding validation item.
+
+## Vercel Deployment Fix
+
+Added `api/match.ts` as a Vercel serverless function for `POST /api/match`, reusing the existing Zod tool and keeping `GEMINI_API_KEY` server-side. Included the function in the TypeScript build and adjusted compiled local entry-point paths so the existing CLI remains available. The UI and Gemini matching behavior were otherwise unchanged.

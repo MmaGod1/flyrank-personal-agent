@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import { executeJobMatchingTool } from "./jobMatchingTool.js";
 
 const port = Number(process.env.PORT ?? 3000);
-const htmlPath = new URL("../public/index.html", import.meta.url);
+const htmlPath = new URL("../../public/index.html", import.meta.url);
 
 const server = createServer(async (request, response) => {
   if (request.method === "GET" && request.url === "/") {

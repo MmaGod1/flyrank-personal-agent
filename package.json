@@ -13,7 +13,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "start": "npm run build && node dist/agent.js",
-    "start:web": "npm run build && node dist/server.js"
+    "start": "npm run build && node dist/src/agent.js",
+    "start:web": "npm run build && node dist/src/server.js"
   }
 }

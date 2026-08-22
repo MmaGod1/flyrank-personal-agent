@@ -173,3 +173,29 @@ Before changing files:
 - Then implement the smallest working version.
 
 Also append this iteration to the EXISTING BUILD_LOG.md. Do not rewrite previous entries.
+
+
+The app deploys successfully to Vercel, but the deployed URL is blank.
+
+Do not change the existing UI, Gemini logic, Zod schema, or functionality.
+
+The issue is that the current app uses a native Node HTTP server (`server.ts`), which works locally but is not being served as a persistent Node server by Vercel.
+
+Adapt the existing implementation to Vercel's serverless architecture with the smallest possible change.
+
+Requirements:
+
+1. Keep the existing `public/index.html` UI.
+2. Keep `jobMatchingTool.ts` and its Zod schema/execute function.
+3. Keep the Gemini API key server-side.
+4. Create the appropriate Vercel API function for `/api/match`.
+5. Make the frontend call `/api/match` exactly as it does locally.
+6. Do not add React, Next.js, or another framework.
+7. Do not rewrite the existing UI.
+8. Keep the local CLI agent working.
+9. Keep the existing `BUILD_LOG.md` and append this deployment fix to it. Do not rewrite previous entries.
+10. Make sure TypeScript builds successfully.
+
+Before making changes, briefly identify which files will be created/modified and why.
+
+Do not deploy or run the production server. I will test and redeploy manually.
