@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Job Scout</title>
+  <style>
+    :root {
+      --ink: #17232b;
+      --muted: #60717a;
+      --paper: #f6f2e9;
+      --card: #fffdf8;
+      --teal: #176b68;
+      --coral: #d96c4f;
+      --line: #d8d3c7;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at 85% 10%, #d9ebe3 0, transparent 30%), var(--paper);
+      color: var(--ink);
+      font: 16px/1.5 Georgia, serif;
+    }
+    main { width: min(980px, calc(100% - 32px)); margin: 0 auto; padding: 62px 0 72px; }
+    header { max-width: 700px; margin-bottom: 34px; }
+    .eyebrow { color: var(--coral); font: 700 12px/1.2 Arial, sans-serif; letter-spacing: .14em; text-transform: uppercase; }
+    h1 { margin: 10px 0 12px; font-size: clamp(42px, 8vw, 76px); line-height: .98; font-weight: 400; }
+    .intro { max-width: 580px; margin: 0; color: var(--muted); font-size: 19px; }
+    .workspace { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, .8fr); gap: 20px; align-items: start; }
+    .panel { padding: 24px; border: 1px solid var(--line); border-radius: 6px; background: rgba(255,253,248,.88); box-shadow: 0 14px 34px rgba(23,35,43,.07); }
+    label, h2, h3 { font-family: Arial, sans-serif; }
+    label { display: block; margin-bottom: 10px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
+    textarea { width: 100%; min-height: 310px; resize: vertical; padding: 15px; border: 1px solid var(--line); border-radius: 4px; background: #fff; color: var(--ink); font: 16px/1.5 Georgia, serif; }
+    textarea:focus { outline: 3px solid rgba(23,107,104,.2); border-color: var(--teal); }
+    button { margin-top: 14px; padding: 12px 18px; border: 0; border-radius: 4px; background: var(--teal); color: #fff; cursor: pointer; font: 700 14px Arial, sans-serif; }
+    button:hover { background: #0f504e; }
+    button:disabled { opacity: .55; cursor: wait; }
+    .status { margin: 0 0 20px; padding-bottom: 15px; border-bottom: 1px solid var(--line); color: var(--muted); font: 700 12px Arial, sans-serif; letter-spacing: .08em; text-transform: uppercase; }
+    .status[data-state="output-error"] { color: var(--coral); }
+    .result h2 { margin: 0 0 8px; font-size: 24px; }
+    .level { display: inline-block; margin-bottom: 22px; padding: 7px 10px; background: #d9ebe3; color: var(--teal); font: 700 13px Arial, sans-serif; text-transform: uppercase; }
+    h3 { margin: 22px 0 7px; font-size: 13px; text-transform: uppercase; letter-spacing: .08em; }
+    ul { margin: 0; padding-left: 20px; }
+    li + li { margin-top: 5px; }
+    .empty { color: var(--muted); }
+    @media (max-width: 720px) {
+      main { padding-top: 38px; }
+      .workspace { grid-template-columns: 1fr; }
+      textarea { min-height: 240px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div class="eyebrow">Personal job scout / FE-07</div>
+      <h1>Find the signal in a job post.</h1>
+      <p class="intro">Paste one opportunity and get a grounded match against your frontend goals.</p>
+    </header>
+    <section class="workspace">
+      <form class="panel" id="job-form">
+        <label for="job-posting">Job posting</label>
+        <textarea id="job-posting" placeholder="Paste the full job description here..."></textarea>
+        <button type="submit" id="analyze">Analyze opportunity</button>
+      </form>
+      <section class="panel result" aria-live="polite">
+        <p class="status" id="status" data-state="input-available">input-available</p>
+        <div id="result-content"><p class="empty">Your structured match will appear here.</p></div>
+      </section>
+    </section>
+  </main>
+  <script>
+    const form = document.querySelector("#job-form");
+    const input = document.querySelector("#job-posting");
+    const button = document.querySelector("#analyze");
+    const status = document.querySelector("#status");
+    const content = document.querySelector("#result-content");
+
+    function setStatus(state) {
+      status.dataset.state = state;
+      status.textContent = state;
+    }
+
+    function renderList(title, items) {
+      const heading = document.createElement("h3");
+      heading.textContent = title;
+      const list = document.createElement("ul");
+      if (!items.length) {
+        const empty = document.createElement("li");
+        empty.textContent = "None identified";
+        list.append(empty);
+      }
+      items.forEach((item) => {
+        const entry = document.createElement("li");
+        entry.textContent = item;
+        list.append(entry);
+      });
+      content.append(heading, list);
+    }
+
+    function renderResult(result) {
+      content.replaceChildren();
+      const heading = document.createElement("h2");
+      heading.textContent = "Match assessment";
+      const level = document.createElement("div");
+      level.className = "level";
+      level.textContent = result.matchLevel + " match";
+      content.append(heading, level);
+      renderList("Reasons", result.reasons);
+      renderList("Relevant requirements", result.relevantRequirements);
+      renderList("Missing requirements", result.missingRequirements);
+    }
+
+    async function analyze() {
+      const jobPosting = input.value.trim();
+      if (!jobPosting) {
+        setStatus("output-error");
+        content.innerHTML = "<p class=\"empty\">Paste a job posting before analyzing it.</p>";
+        return;
+      }
+
+      setStatus("input-streaming");
+      button.disabled = true;
+      try {
+        const response = await fetch("/api/match", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ jobPosting })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "The job could not be analyzed.");
+        renderResult(data);
+        setStatus("output-available");
+      } catch (error) {
+        content.replaceChildren();
+        const message = document.createElement("p");
+        message.className = "empty";
+        message.textContent = error instanceof Error ? error.message : "The job could not be analyzed.";
+        content.append(message);
+        const retry = document.createElement("button");
+        retry.type = "button";
+        retry.textContent = "Retry analysis";
+        retry.addEventListener("click", analyze);
+        content.append(retry);
+        setStatus("output-error");
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      analyze();
+    });
+    input.addEventListener("input", () => {
+      if (!button.disabled && input.value.trim()) setStatus("input-available");
+    });
+  </script>
+</body>
+</html>

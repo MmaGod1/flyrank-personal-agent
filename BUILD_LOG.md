@@ -65,3 +65,7 @@ Vercel could not execute the locally installed `node_modules/.bin/tsc` shim and 
 ## Vercel Root Route Fix
 
 Added `vercel.json` with a root rewrite from `/` to `/public/index.html`, so Vercel serves the existing UI at the deployed root. The rewrite does not affect `/api/match`, which continues to resolve to `api/match.ts`; local commands and application functionality remain unchanged.
+
+## Frontend Entry Point Relocation
+
+Moved the unchanged frontend file from `public/index.html` to the repository-root `index.html`. Removed the rewrite-only `vercel.json`; Vercel can now serve the root index file directly. Updated the local server path to preserve the existing local web command. `api/match.ts` was left unchanged.
