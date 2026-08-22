@@ -57,3 +57,7 @@ Implemented the browser UI, server-side Gemini connection, Zod-backed job-matchi
 ## Vercel Deployment Fix
 
 Added `api/match.ts` as a Vercel serverless function for `POST /api/match`, reusing the existing Zod tool and keeping `GEMINI_API_KEY` server-side. Included the function in the TypeScript build and adjusted compiled local entry-point paths so the existing CLI remains available. The UI and Gemini matching behavior were otherwise unchanged.
+
+## Vercel Build Permission Fix
+
+Vercel could not execute the locally installed `node_modules/.bin/tsc` shim and reported `Permission denied`, although the project built locally. Updated the `build` script to invoke TypeScript through Node at `./node_modules/typescript/bin/tsc`, avoiding the executable shim without changing application code or functionality. The existing TypeScript 5.9.3 dependency and lockfile were retained.

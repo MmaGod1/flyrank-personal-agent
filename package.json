@@ -12,7 +12,7 @@
   "private": "true",
   "type": "module",
   "scripts": {
-    "build": "tsc",
+    "build": "node ./node_modules/typescript/bin/tsc",
     "start": "npm run build && node dist/src/agent.js",
     "start:web": "npm run build && node dist/src/server.js"
   }
