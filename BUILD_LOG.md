@@ -69,3 +69,25 @@ Added `vercel.json` with a root rewrite from `/` to `/public/index.html`, so Ver
 ## Frontend Entry Point Relocation
 
 Moved the unchanged frontend file from `public/index.html` to the repository-root `index.html`. Removed the rewrite-only `vercel.json`; Vercel can now serve the root index file directly. Updated the local server path to preserve the existing local web command. `api/match.ts` was left unchanged.
+
+## FE-06: Streaming Job Qualification Chat
+
+Added a second, independent Gemini interaction: a multi-turn streaming Job
+Qualification Chat, alongside the existing one-shot job-matching tool (unchanged).
+
+- New `api/qualify.ts`: streams Gemini's response via `generateContentStream`,
+  writing chunks directly to the response as they arrive. `GEMINI_API_KEY` stays
+  server-side, same convention as `api/match.ts`.
+- New `src/qualifyAgent.ts`: model name and qualification system prompt in one
+  commented module, separate from `src/jobMatchingTool.ts`.
+- `index.html`: added a chat panel below the existing job-form panel, reusing the
+  existing color/type system. Client holds conversation history in memory and
+  resends it each turn (server is stateless per request). Stop is implemented
+  with `AbortController`; aborting stops the client from reading further chunks
+  and keeps whatever text had already streamed in. Auto-scroll only forces the
+  scroll position when the user is already near the bottom, with a "Jump to
+  latest" control otherwise.
+- No new dependencies, no new environment variables.
+- Known limitation: the Gemini SDK's stream has no cancel handle, so clicking
+  Stop halts the client from displaying further output but doesn't guarantee
+  the server-side generation call itself is cut short immediately.
