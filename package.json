@@ -1,11 +1,15 @@
 {
   "dependencies": {
     "@google/genai": "^2.18.0",
+    "@vercel/blob": "^2.8.0",
+    "react-markdown": "^10.1.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@types/node": "^26.2.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.11"
   },
   "name": "flyrank-personal-agent",
   "version": "1.0.0",
@@ -14,6 +18,9 @@
   "scripts": {
     "build": "node ./node_modules/typescript/bin/tsc",
     "start": "npm run build && node dist/src/agent.js",
-    "start:web": "npm run build && node dist/src/server.js"
+    "start:web": "npm run build && node dist/src/server.js",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:e2e": "playwright test"
   }
 }

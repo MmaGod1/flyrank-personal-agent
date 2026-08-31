@@ -1,4 +1,9 @@
 import { executeJobMatchingTool } from "../src/jobMatchingTool.js";
+// FE-11: the only change in this file vs. the original is this maxDuration
+// export, capping how long this Gemini-calling function may run.
+export const config = {
+    maxDuration: 30,
+};
 function sendJson(response, statusCode, body) {
     if (typeof response.status === "function" && typeof response.json === "function") {
         response.status(statusCode).json(body);
